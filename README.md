@@ -96,15 +96,7 @@ View Logs: journalctl -u weekly_bot -f
 🕹️ Commands
 !weekly - Manually fetches and displays the current Weekly Update.
 
+---
 
-
-
-
-
-
-
-
-
-
-
-
+📄 License
+This project is open-source and free to use.
