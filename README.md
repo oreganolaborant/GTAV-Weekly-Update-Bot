@@ -15,7 +15,7 @@ Persistence: Remembers the last posted update to prevent duplicate pings after a
 
 ---
 
-📋 Prerequisites
+## 📋 Prerequisites
 Python 3.8+ installed on your Linux system.
 
 A Discord Bot Token (obtainable via the [Discord Developer Portal](https://discord.com/developers/applications)).
@@ -23,7 +23,7 @@ A Discord Bot Token (obtainable via the [Discord Developer Portal](https://disco
 Privileged Gateway Intents: Ensure "Message Content Intent" is enabled in your Bot's settings on the Developer Portal.
 
 ---
-🛠️ Installation
+### 🛠️ Installation
 1. Install Required Libraries
 Open your terminal or command prompt and run:
 ```
@@ -39,7 +39,7 @@ Create a file named last_weekly_link.txt in the same folder (leave it empty).
 
 ---
 
-⚙️ Setup as a System Service (24/7 Uptime)
+### ⚙️ Setup as a System Service (24/7 Uptime)
 To ensure the bot runs 24/7 and restarts automatically after a server reboot, follow these steps to create a Linux Systemd service.
 
 1. Create the Service File
@@ -93,10 +93,11 @@ View Logs: journalctl -u weekly_bot -f
 
 ---
 
-🕹️ Commands
+## 🕹️ Commands
 !weekly - Manually fetches and displays the current Weekly Update.
 
 ---
 
-📄 License
+## 📄 License
+
 This project is open-source and free to use.
