@@ -1,0 +1,14 @@
+[Unit]
+Description=GTA Weekly Update Discord Bot
+After=network.target
+
+[Service]
+Type=simple
+User=YOURUSERNAME
+WorkingDirectory=/home/YOURUSERNAME/gta_weekly_bot
+ExecStart=/home/YOURUSERNAME/gta_weekly_bot/venv/bin/python3 /home/YOURUSERNAME/gta_weekly_bot/weekly_bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

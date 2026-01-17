@@ -1,0 +1,106 @@
+import discord
+from discord.ext import commands, tasks
+import aiohttp
+from datetime import datetime
+import os
+
+# --- CONFIGURATION (REPLACE THESE) ---
+TOKEN = 'YOUR_BOT_TOKEN_HERE'	      # Replace with your Bot Token
+NEWS_CHANNEL_ID = 000000000000000000  # Replace with your Channel ID
+ROLE_ID = "000000000000000000"        # Replace with the Role ID to ping
+ID_FILE = "last_weekly_link.txt" 
+
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+# --- STORAGE FUNCTIONS ---
+def get_last_posted_link():
+    if os.path.exists(ID_FILE):
+        with open(ID_FILE, "r") as f:
+            return f.read().strip()
+    return None
+
+def save_posted_link(url):
+    with open(ID_FILE, "w") as f:
+        f.write(url)
+
+async def fetch_gta_reddit_full():
+    # Searching r/gtaonline for posts with the Weekly Update flair
+    url = "https://www.reddit.com/r/gtaonline/search.json?q=flair_name%3A%22%3AWU1%3A%3AWU2%3A%3AWU3%3A%3AWU4%3A%3AWU5%3A%3AWU6%3A%22&restrict_sr=1&sort=new"
+    headers = {'User-Agent': 'DiscordBot/1.0'}
+    
+    async with aiohttp.ClientSession(headers=headers) as session:
+        try:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    posts = data.get('data', {}).get('children', [])
+                    if posts:
+                        p = posts[0]['data']
+                        content = p['selftext']
+                        post_url = f"https://reddit.com{p['permalink']}"
+                        
+                        # Limit description to fit Discord's Embed limit
+                        if len(content) > 3800:
+                            content = content[:3800] + "..."
+                        
+                        content += f"\n\n🔗 [Read full list on Reddit]({post_url})"
+                        
+                        return {
+                            "title": p['title'],
+                            "url": post_url,
+                            "content": content
+                        }
+                return None
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+
+# --- AUTOMATIC CHECK (Every 60 Minutes) ---
+@tasks.loop(minutes=60)
+async def auto_check():
+    channel = bot.get_channel(NEWS_CHANNEL_ID)
+    if not channel: return
+
+    data = await fetch_gta_reddit_full()
+    if data:
+        last_link = get_last_posted_link()
+        
+        # Only post if it's a new update
+        if data['url'] != last_link:
+            embed = discord.Embed(
+                title=data['title'],
+                url=data['url'],
+                description=data['content'],
+                color=0xf1c40f
+            )
+            embed.set_footer(text=f"Reddit Source • {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+            
+            await channel.send(content=f"🔔 **New GTA Weekly Update available!** <@&{ROLE_ID}>", embed=embed)
+            save_posted_link(data['url'])
+
+@bot.command()
+async def weekly(ctx):
+    """Manually fetch the current weekly update"""
+    async with ctx.typing():
+        data = await fetch_gta_reddit_full()
+        if data:
+            embed = discord.Embed(
+                title=f"📢 {data['title']}",
+                url=data['url'],
+                description=data['content'],
+                color=0xf1c40f
+            )
+            embed.set_footer(text="Requested via !weekly")
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send("❌ Error fetching data.")
+
+@bot.event
+async def on_ready():
+    print(f"Bot is online as {bot.user}")
+    if not auto_check.is_running():
+        auto_check.start()
+
+bot.run(TOKEN)
